@@ -1,6 +1,6 @@
 import userModel, { IUser, _IUser } from '../models/user'
-/** 
- * username: string
+/*
+  username: string
   password: string
   name: string
   gender: 'female' | 'male' | 'unknown'
@@ -14,8 +14,8 @@ const createExample = async () => {
     password: 'Kortek',
     username: 'petez'
   }
-  await userModel.create({...asd})
-  const a = new userModel({...asd})
+  await userModel.create({ ...asd })
+  const a = new userModel({ ...asd })
   await a.save()
 }
 

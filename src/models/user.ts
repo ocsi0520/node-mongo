@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose'
 
 export interface _IUser {
   username: string
@@ -16,7 +16,7 @@ const UserSchema: Schema = new Schema({
   name: { type: String, required: true },
   gender: { type: String, required: true },
   birthDate: { type: Date, required: true }
-});
+})
 
 // Export the model and return your IUser interface
-export default mongoose.model<IUser>('User', UserSchema);
+export default mongoose.model<IUser>('User', UserSchema)

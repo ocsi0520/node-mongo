@@ -19,8 +19,7 @@ app.listen(3000, () => console.info('Listenning on port 3000'))
   await connectToMongoDb()
 })()
 
-
-async function createExampleHandler(request: Request, response: Response) {
+async function createExampleHandler (request: Request, response: Response) {
   try {
     await userDao.createExample()
     response.send('successfull')
