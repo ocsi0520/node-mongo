@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose'
 
+// tslint:disable-next-line:class-name
 export interface _IUser {
   username: string
   password: string

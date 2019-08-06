@@ -1,4 +1,8 @@
-import userModel, { IUser, _IUser } from '../models/user'
+import userModel, { _IUser } from '../models/user'
+import bcrypt from 'bcrypt'
+
+const saltRounds = 10 // TODO: it might worth to check this out: https://www.npmjs.com/package/bcrypt-salt
+
 /*
   username: string
   password: string
@@ -15,10 +19,15 @@ const createExample = async () => {
     username: 'petez'
   }
   await userModel.create({ ...asd })
-  const a = new userModel({ ...asd })
-  await a.save()
+}
+
+const registerUser = async (user: _IUser) => {
+  const hashedPassword = await bcrypt.hash(user.password, saltRounds)
+  user.password = hashedPassword
+  await userModel.create(user)
 }
 
 export default {
-  createExample
+  createExample,
+  registerUser
 }
