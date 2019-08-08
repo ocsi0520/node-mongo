@@ -1,6 +1,7 @@
 import { Router, Response, Request } from 'express'
 import userDao from '../store/userDao'
-import { _IUser } from '../models/user'
+import user, { _IUser } from '../models/user'
+import { body } from 'express-validator'
 
 const apiRouter = Router()
 
@@ -15,45 +16,16 @@ async function createExampleHandler (request: Request, response: Response) {
   }
 }
 
-// TODO: overhack
 const isSecurePassword = (plainPassword: string) => {
   const validators: Array<{test: (str: string) => boolean}> = [/[a-z]/, /[A-Z]/, /[0-9]/]
   return validators.every(validator => validator.test(plainPassword))
-}
-
-const isValidDate = (date: any) => {
-  return date instanceof Date && !isNaN(date.valueOf())
-}
-
-const isString = (str: any) => {
-  return typeof(str) === 'string' || str instanceof String
-}
-
-// validálás:
-// megvan az összes attribútuma és azok típusai is megfelelőek
-// megfelelő intervallumba esnek ezek az értékek (pl a jelszó legalább 8 karakteres)
-const isValidUser = (user: any) => {
-  // typic side-effect
-  const userBirthDate = new Date(user.birthDate)
-  user.birthDate = userBirthDate
-  return (
-    user &&
-    isValidDate(user.birthDate) &&
-    ['male', 'female', 'unknown'].includes(user.gender) &&
-    isString(user.name) && user.name.length > 2 &&
-    isString(user.password) && isSecurePassword(user.password) &&
-    isString(user.username) && user.username.length > 2
-  )
 }
 
 // EXAMINE: bcrypt-ről hablaty
 // https://stackoverflow.com/questions/6832445/how-can-bcrypt-have-built-in-salts
 const registerUser = async (request: Request, response: Response) => {
   const registerRequest = request.body
-  if (!isValidUser(registerRequest)) {
-    response.status(400).send('Invalid register request')
-    return
-  }
+  registerRequest.birthDate = new Date(registerRequest.birthDate)
   try {
     await userDao.registerUser(registerRequest)
     response.status(201).send()
@@ -64,6 +36,11 @@ const registerUser = async (request: Request, response: Response) => {
 
 // TODO: login
 
-apiRouter.post('/register', registerUser)
+apiRouter.post('/register', [
+  body('birthDate').isISO8601(),
+  body('gender').isIn(['male', 'female', 'unknown']),
+  body(['name', 'username']).isString().isLength({ min: 2 }),
+  body('password').isString().isLength({ min: 8 }).custom(isSecurePassword),
+], registerUser)
 
 export default apiRouter
