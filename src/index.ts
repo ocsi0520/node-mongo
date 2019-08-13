@@ -5,6 +5,8 @@ import express from 'express'
 import { connectToMongoDb } from './store/init'
 import apiHandler from './api/api'
 
+// TODO: dotenv
+
 const app = express()
 
 app.use(express.json())
@@ -21,3 +23,7 @@ app.use('*', (req, res) => {
 })
 
 app.listen(3000, () => console.info('Listenning on port 3000'))
+
+// proper http methods, statuses, and other stuffs:
+// https://tools.ietf.org/html/rfc7230
+// https://tools.ietf.org/html/rfc7231
