@@ -4,8 +4,9 @@
 import express from 'express'
 import { connectToMongoDb } from './store/init'
 import apiHandler from './api/api'
+import dotenv from 'dotenv'
 
-// TODO: dotenv
+dotenv.config()
 
 const app = express()
 

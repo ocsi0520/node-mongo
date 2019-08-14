@@ -9,4 +9,5 @@ COPY . /usr/src/app
 RUN npm install
 RUN npm rebuild bcrypt --update-binary
 EXPOSE 3000
+ENV DATABASE_ADDRESS=mongodb://mongo:27017/penz
 CMD ["npm","start"]
