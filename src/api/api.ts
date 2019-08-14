@@ -3,6 +3,7 @@ import userDao from '../store/userDao'
 import { _IUser } from '../models/user'
 import { body, validationResult } from 'express-validator'
 import { httpStatuses } from '../models/responses'
+import { createToken, verifyToken } from '../auth/jwt'
 
 const isValidRequest = (request: Request, response: Response) => {
   const errors = validationResult(request)
@@ -42,9 +43,32 @@ const loginUser = async (request: Request, response: Response) => {
   try {
     const loginResponse = await userDao.loginUser(loginRequest)
     const statusCode = httpStatuses[loginResponse.status]
-    response.status(statusCode).send(loginResponse.value)
+    const value = loginResponse.value
+    if (value) {
+      const token = createToken({id: value._id})
+      response.cookie('token', token, { maxAge: 15 * 60 * 1000, httpOnly: true }).status(httpStatuses.ok).send(token)
+    } else {
+      response.status(statusCode).send(value)
+    }
   } catch (e) {
     response.status(500).send(e.message)
+  }
+}
+
+const getMyProfile = async (request: Request, response: Response) => {
+  // if (!isValidRequest(request, response)) { return }
+
+  const token = request.cookies.token
+  const {id: userId} = verifyToken(token) as any
+  if (userId) {
+    try {
+      const databaseResponse = await userDao.getUserById(userId)
+      response.status(httpStatuses.ok).send(databaseResponse.value)
+    } catch (e) {
+      response.status(httpStatuses.notCorrectSyntactically).send()
+    }
+  } else {
+    response.status(httpStatuses.notCorrectSemantically).send()
   }
 }
 
@@ -58,5 +82,7 @@ apiRouter.post('/register', [
   body(['name', 'username']).isString().isLength({ min: 2 }).withMessage(`'name' and 'username' must be a string with at least 2 characters`),
   body('password').isString().isLength({ min: 8 }).custom(isSecurePassword).withMessage(`'password' must be at least 8 characters and must contain a number, a capital and a lower letter`),
 ], registerUser)
+
+apiRouter.get('/myProfile', getMyProfile)
 
 export default apiRouter

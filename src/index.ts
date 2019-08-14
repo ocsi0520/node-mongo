@@ -5,12 +5,14 @@ import express from 'express'
 import { connectToMongoDb } from './store/init'
 import apiHandler from './api/api'
 import dotenv from 'dotenv'
+import cookieParser from 'cookie-parser'
 
 dotenv.config()
 
 const app = express()
 
 app.use(express.json())
+app.use(cookieParser())
 
 ;(async function () {
   await connectToMongoDb()

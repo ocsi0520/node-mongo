@@ -23,7 +23,7 @@ const registerUser = async (user: _IUser): Promise<DatabaseResponse> => {
 
 // EXAMINE: deconstructions, spread operatort elmagyarázni
 const loginUser = async ({ username, password }: {username: string, password: string}): Promise<DatabaseResponse> => {
-  const user: _IUser = await userModel.findOne({ username }, { __v: 0, _id: 0 })
+  const user: _IUser = await userModel.findOne({ username }, { __v: 0 })
   if (!user) {
     return { status: DatabaseResponseStatuses.notFound, value: null }
   }
@@ -39,7 +39,17 @@ const loginUser = async ({ username, password }: {username: string, password: st
   return { status: DatabaseResponseStatuses.ok, value: user }
 }
 
+const getUserById = async (id: string) => {
+  const user: _IUser = await userModel.findById(id, { __v: 0, password: 0, _id: 0 })
+  if (!user) {
+    return { status: DatabaseResponseStatuses.notFound, value: null }
+  }
+  // user.password = undefined
+  return { status: DatabaseResponseStatuses.ok, value: user }
+}
+
 export default {
   registerUser,
-  loginUser
+  loginUser,
+  getUserById
 }
