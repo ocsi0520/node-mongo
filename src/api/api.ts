@@ -45,7 +45,7 @@ const loginUser = async (request: Request, response: Response) => {
     const statusCode = httpStatuses[loginResponse.status]
     const value = loginResponse.value
     if (value) {
-      const token = createToken({id: value._id})
+      const token = createToken({ id: value._id })
       response.cookie('token', token, { maxAge: 15 * 60 * 1000, httpOnly: true }).status(httpStatuses.ok).send(token)
     } else {
       response.status(statusCode).send(value)
@@ -59,7 +59,7 @@ const getMyProfile = async (request: Request, response: Response) => {
   // if (!isValidRequest(request, response)) { return }
 
   const token = request.cookies.token
-  const {id: userId} = verifyToken(token) as any
+  const { id: userId } = verifyToken(token) as any
   if (userId) {
     try {
       const databaseResponse = await userDao.getUserById(userId)

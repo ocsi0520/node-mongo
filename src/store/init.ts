@@ -1,12 +1,7 @@
 import mongoose from 'mongoose'
 
-export const connectToMongoDb = async () => {
-  try {
-    await mongoose.connect(process.env.DATABASE_ADDRESS, { useNewUrlParser: true, ...getAuthForDatabase() })
-    console.info('jók vagyunk')
-  } catch (e) {
-    console.info('szar az egész')
-  }
+export const connectToMongoDb = () => {
+  return mongoose.connect(process.env.DATABASE_ADDRESS || 'mongodb://localhost:27017/penz', { useNewUrlParser: true, ...getAuthForDatabase() })
 }
 
 const getAuthForDatabase = () => {

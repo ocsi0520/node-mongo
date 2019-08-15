@@ -2,20 +2,28 @@
 // https://medium.com/statuscode/dockerising-a-node-js-and-mongodb-app-d22047e2806f
 // https://stackoverflow.com/questions/53216884/how-to-connect-to-mongodb-using-node-js-written-in-typescript
 import express from 'express'
+import dotenv from 'dotenv'
+dotenv.config()
+
 import { connectToMongoDb } from './store/init'
 import apiHandler from './api/api'
-import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
-
-dotenv.config()
 
 const app = express()
 
 app.use(express.json())
 app.use(cookieParser())
 
-;(async function () {
-  await connectToMongoDb()
+;(function () {
+  connectToMongoDb().catch((reason) => {
+    console.error('could not connect to database')
+    console.error('might be no mongo? try `docker start mongo`')
+    console.error('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+    console.error('||||||||||||||||||||||||||||||||||||||||||||')
+    console.error('____________________________________________')
+    console.error(reason)
+    process.exit(1)
+  })
 })()
 
 app.use('/api', apiHandler)

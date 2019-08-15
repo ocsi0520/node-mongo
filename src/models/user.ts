@@ -2,11 +2,11 @@ import mongoose, { Schema, Document } from 'mongoose'
 
 // tslint:disable-next-line:class-name
 export interface _IUser {
-  username: string
-  password: string
-  name: string
-  gender: 'female' | 'male' | 'unknown'
-  birthDate: Date
+  username?: string
+  password?: string
+  name?: string
+  gender?: 'female' | 'male' | 'unknown'
+  birthDate?: Date
 }
 
 export interface IUser extends Document, _IUser {}
