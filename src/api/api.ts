@@ -5,6 +5,11 @@ import { body, validationResult } from 'express-validator'
 import { httpStatuses } from '../models/responses'
 import { createToken, verifyToken } from '../auth/jwt'
 
+const getUserIdFromToken = (token: string) => {
+  const { id: userId } = verifyToken(token) as any
+  return userId
+}
+
 const isValidRequest = (request: Request, response: Response) => {
   const errors = validationResult(request)
   if (!errors.isEmpty()) {
@@ -58,11 +63,26 @@ const loginUser = async (request: Request, response: Response) => {
 const getMyProfile = async (request: Request, response: Response) => {
   // if (!isValidRequest(request, response)) { return }
 
-  const token = request.cookies.token
-  const { id: userId } = verifyToken(token) as any
+  const userId = getUserIdFromToken(request.cookies.token)
   if (userId) {
     try {
       const databaseResponse = await userDao.getUserById(userId)
+      response.status(httpStatuses.ok).send(databaseResponse.value)
+    } catch (e) {
+      response.status(httpStatuses.notCorrectSyntactically).send()
+    }
+  } else {
+    response.status(httpStatuses.notCorrectSemantically).send()
+  }
+}
+
+const follow = async (request: Request, response: Response) => {
+  // if (!isValidRequest(request, response)) { return }
+  const userId = getUserIdFromToken(request.cookies.token)
+  const followingUserId = request.body.followingUserId
+  if (userId && followingUserId) {
+    try {
+      const databaseResponse = await userDao.followUser(userId, followingUserId)
       response.status(httpStatuses.ok).send(databaseResponse.value)
     } catch (e) {
       response.status(httpStatuses.notCorrectSyntactically).send()
@@ -84,5 +104,7 @@ apiRouter.post('/register', [
 ], registerUser)
 
 apiRouter.get('/myProfile', getMyProfile)
+
+apiRouter.post('/follow', follow)
 
 export default apiRouter

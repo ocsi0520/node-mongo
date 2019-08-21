@@ -7,6 +7,9 @@ export interface _IUser {
   name?: string
   gender?: 'female' | 'male' | 'unknown'
   birthDate?: Date
+  friends: Array<string>
+  pendings: Array<string>
+  requests: Array<string>
 }
 
 export interface IUser extends Document, _IUser {}
