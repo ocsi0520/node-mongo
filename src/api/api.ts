@@ -1,4 +1,4 @@
-import { Router, Response, Request } from 'express'
+import { Router, Response, Request, NextFunction } from 'express'
 import userDao from '../store/userDao'
 import { _IUser } from '../models/user'
 import { body, validationResult } from 'express-validator'
@@ -56,21 +56,27 @@ const loginUser = async (request: Request, response: Response) => {
 }
 
 const getMyProfile = async (request: Request, response: Response) => {
-  // if (!isValidRequest(request, response)) { return }
-
-  const token = request.cookies.token
-  const { id: userId } = verifyToken(token) as any
-  if (userId) {
+  const userId: string = request.body.userId
     try {
       const databaseResponse = await userDao.getUserById(userId)
-      response.status(httpStatuses.ok).send(databaseResponse.value)
+      const httpStatus = httpStatuses[databaseResponse.status]
+      response.status(httpStatus).send(databaseResponse.value)
     } catch (e) {
-      response.status(httpStatuses.notCorrectSyntactically).send()
+      response.status(httpStatuses.internalError).send()
     }
-  } else {
-    response.status(httpStatuses.notCorrectSemantically).send()
-  }
 }
+
+const tokenHandler = (request: Request, response: Response, next: NextFunction) => {
+  const token = request.cookies.token
+  const { id: userId } = verifyToken(token) as any
+  if (!userId) {
+    response.status(httpStatuses.notCorrectSemantically).send('token is missing, login please')
+    return
+  }
+  request.body.userId = userId
+  next()
+}
+
 
 apiRouter.post('/login', [
   body(['username','password']).isString()
@@ -82,6 +88,8 @@ apiRouter.post('/register', [
   body(['name', 'username']).isString().isLength({ min: 2 }).withMessage(`'name' and 'username' must be a string with at least 2 characters`),
   body('password').isString().isLength({ min: 8 }).custom(isSecurePassword).withMessage(`'password' must be at least 8 characters and must contain a number, a capital and a lower letter`),
 ], registerUser)
+
+apiRouter.use('/', tokenHandler)
 
 apiRouter.get('/myProfile', getMyProfile)
 

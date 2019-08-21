@@ -10,7 +10,8 @@ export const httpStatuses = {
   conflict: 409,
   notCorrectSemantically: 422, // Unprocessable entity
   locked: 423,
-  tooManyRequests: 429
+  tooManyRequests: 429,
+  internalError: 500
 }
 
 export enum DatabaseResponseStatuses {
