@@ -49,8 +49,15 @@ const getUserById = async (id: string) => {
   return { status: DatabaseResponseStatuses.ok, value: user }
 }
 
+const getUserByGender = async (gender: string) => {
+  const users: _IUser[] = await userModel.find({ gender: gender }, { __v: 0, password: 0, _id: 0 }).exec()
+  // user.password = undefined
+  return { status: DatabaseResponseStatuses.ok, value: users }
+}
+
 export default {
   registerUser,
   loginUser,
-  getUserById
+  getUserById,
+  getUserByGender
 }

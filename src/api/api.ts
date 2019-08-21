@@ -2,7 +2,7 @@ import { Router, Response, Request, NextFunction } from 'express'
 import userDao from '../store/userDao'
 import { _IUser } from '../models/user'
 import { body, validationResult } from 'express-validator'
-import { httpStatuses } from '../models/responses'
+import { httpStatuses, DatabaseResponseStatuses } from '../models/responses'
 import { createToken, verifyToken } from '../auth/jwt'
 
 const isValidRequest = (request: Request, response: Response) => {
@@ -57,13 +57,13 @@ const loginUser = async (request: Request, response: Response) => {
 
 const getMyProfile = async (request: Request, response: Response) => {
   const userId: string = request.body.userId
-    try {
-      const databaseResponse = await userDao.getUserById(userId)
-      const httpStatus = httpStatuses[databaseResponse.status]
-      response.status(httpStatus).send(databaseResponse.value)
-    } catch (e) {
-      response.status(httpStatuses.internalError).send()
-    }
+  try {
+    const databaseResponse = await userDao.getUserById(userId)
+    const httpStatus = httpStatuses[databaseResponse.status]
+    response.status(httpStatus).send(databaseResponse.value)
+  } catch (e) {
+    response.status(httpStatuses.internalError).send()
+  }
 }
 
 const tokenHandler = (request: Request, response: Response, next: NextFunction) => {
@@ -77,6 +77,29 @@ const tokenHandler = (request: Request, response: Response, next: NextFunction) 
   next()
 }
 
+const findMate = async (request: Request, response: Response) => {
+  const userId: string = request.body.userId
+  const myProfileResponse = await userDao.getUserById(userId)
+  if(!myProfileResponse.value){
+    response.status(httpStatuses.notFound).send('Profile not found')
+    return
+  }
+  const myGender = myProfileResponse.value.gender as _IUser['gender'] & string
+  if(myGender == 'unknown'){
+    response.status(httpStatuses.notCorrectSemantically).send('Your gender is unknown')
+    return
+  }
+
+  const oppositeGender = (myGender === 'female') ? 'male' : 'female';
+
+  try {
+    const databaseResponse = await userDao.getUserByGender(oppositeGender)
+    const httpStatus = httpStatuses[databaseResponse.status]
+    response.status(httpStatus).send(databaseResponse.value)
+  } catch (e) {
+    response.status(httpStatuses.internalError).send()
+  }
+}
 
 apiRouter.post('/login', [
   body(['username','password']).isString()
@@ -92,5 +115,7 @@ apiRouter.post('/register', [
 apiRouter.use('/', tokenHandler)
 
 apiRouter.get('/myProfile', getMyProfile)
+
+apiRouter.get('/findMate', findMate)
 
 export default apiRouter
