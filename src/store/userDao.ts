@@ -81,15 +81,8 @@ const addToUserArray = async (user: IUser, followUser: IUser, nameOfUserArray: s
     userArray = []
   }
   // userArray.push(followUser.id)
-  const userUpdated = await userModel.findByIdAndUpdate(user.id, { $push: { [nameOfUserArray]: { 'id': followUser.id } } },{ 'new': true, 'upsert': true }, (err, res) => {
-    if (err) {
-      console.log(err)
-    } else {
-      console.log(res)
-    }
-
-  })
-
+  const userUpdated = userModel.findByIdAndUpdate(user.id, { $push: { [nameOfUserArray]: { 'id': followUser.id } } },{ 'new': true, 'upsert': true })
+  console.log(userUpdated.getQuery)
 }
 
 // Remove follow user to user friends
@@ -97,7 +90,7 @@ const removeUserRequest = async (user: IUser, followUser: IUser) => {
   let requests = user.requests
   const index = requests.indexOf(followUser.id)
   requests.splice(index, 1)
-  const userUpdated = await userModel.findByIdAndUpdate(user.id, { requests: requests })
+  const userUpdated = userModel.findByIdAndUpdate(user.id, { requests: requests })
 }
 
 // Remove follow user to user friends
@@ -105,7 +98,7 @@ const removeUserPending = async (user: IUser, followUser: IUser) => {
   let pendings = user.pendings
   const index = pendings.indexOf(followUser.id)
   pendings.splice(index, 1)
-  const userUpdated = await userModel.findByIdAndUpdate(user.id, { pendings: pendings })
+  const userUpdated = userModel.findByIdAndUpdate(user.id, { pendings: pendings })
 }
 
 const completeRequest = async (user: IUser, followUser: IUser) => {
