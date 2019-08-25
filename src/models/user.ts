@@ -8,7 +8,7 @@ export interface _IUser {
   gender?: 'female' | 'male' | 'unknown'
   birthDate?: Date
   friends: Array<string>
-  pendings: Array<string>
+  pendings: string[]
   requests: Array<string>
 }
 
