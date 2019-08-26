@@ -51,7 +51,7 @@ const getUserById = async (id: string) => {
 
 const followUser = async (userId: string, followUserId: string) => {
   const user: IUser | null = await userModel.findOne({ _id: userId }).exec()
-  const followUser: IUser | null = await userModel.findOne({ _id: userId }).exec()
+  const followUser: IUser | null = await userModel.findOne({ _id: followUserId }).exec()
   if (!user || !followUser) {
     return { status: DatabaseResponseStatuses.notFound, value: null }
   }
@@ -81,8 +81,8 @@ const addToUserArray = async (user: IUser, followUser: IUser, nameOfUserArray: s
     userArray = []
   }
   // userArray.push(followUser.id)
-  const userUpdated = userModel.findByIdAndUpdate(user.id, { $push: { [nameOfUserArray]: { 'id': followUser.id } } },{ 'new': true, 'upsert': true })
-  console.log(userUpdated.getQuery)
+  const userUpdated = userModel.findByIdAndUpdate(user.id, { $push: { nameOfUserArray: { 'id': followUser.id } } },{ 'new': true, 'upsert': true })
+  console.log('as')
 }
 
 // Remove follow user to user friends
@@ -102,10 +102,10 @@ const removeUserPending = async (user: IUser, followUser: IUser) => {
 }
 
 const completeRequest = async (user: IUser, followUser: IUser) => {
-  const userUpdated = addToUserArray(user, followUser, 'friends')
-  const followUserUpdated = addToUserArray(followUser, user, 'friends')
-  const userFriendsUpdated = removeUserRequest(followUser, user)
-  const followUseruserFriendsUpdated = removeUserPending(user, followUser)
+  const userUpdated = await addToUserArray(user, followUser, 'friends')
+  const followUserUpdated = await addToUserArray(followUser, user, 'friends')
+  const userFriendsUpdated = await removeUserRequest(followUser, user)
+  const followUseruserFriendsUpdated = await removeUserPending(user, followUser)
 
 }
 
