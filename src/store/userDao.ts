@@ -68,7 +68,7 @@ const followUser = async (userId: string, followUserId: string) => {
 }
 
 const isUserAlreadyRequested = (user: IUser, followUser: IUser) => {
-  if (user.requests == undefined) {
+  if (user.requests === undefined) {
     return false
   }
   const index = user.requests.indexOf(followUser.id)
@@ -77,11 +77,11 @@ const isUserAlreadyRequested = (user: IUser, followUser: IUser) => {
 
 const addToUserArray = async (user: IUser, followUser: IUser, nameOfUserArray: string) => {
   let userArray = (user as any)[nameOfUserArray]
-  if (userArray == undefined) {
+  if (userArray === undefined) {
     userArray = []
   }
   // userArray.push(followUser.id)
-  const userUpdated = userModel.findByIdAndUpdate(user.id, { $push: { nameOfUserArray: { 'id': followUser.id } } },{ 'new': true, 'upsert': true })
+  const userUpdated = userModel.findByIdAndUpdate(user.id, { $push: { nameOfUserArray: followUser.id } },{ 'new': true, 'upsert': true })
   console.log('as')
 }
 
