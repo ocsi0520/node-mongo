@@ -2,7 +2,7 @@ import { Router, Response, Request, NextFunction } from 'express'
 import userDao from '../store/userDao'
 import { _IUser } from '../models/user'
 import { body, validationResult } from 'express-validator'
-import { httpStatuses } from '../models/responses'
+import { httpStatuses, DatabaseResponseStatuses } from '../models/responses'
 import { createToken, verifyToken } from '../auth/jwt'
 
 const getUserIdFromToken = (token: string) => {
@@ -73,12 +73,12 @@ const getMyProfile = async (request: Request, response: Response) => {
 
 const tokenHandler = (request: Request, response: Response, next: NextFunction) => {
   const token = request.cookies.token
-  const { id: userId } = verifyToken(token) as any
-  if (!userId) {
-    response.status(httpStatuses.notCorrectSemantically).send('token is missing, login please')
+  const verifiedToken: any = verifyToken(token)
+  if(!verifiedToken){
+    response.status(httpStatuses.notCorrectSemantically).send('token is missing, or incorrect')
     return
   }
-  request.body.userId = userId
+  request.body.userId = verifiedToken.id
   next()
 }
 
@@ -95,6 +95,29 @@ const follow = async (request: Request, response: Response) => {
     }
   } else {
     response.status(httpStatuses.notCorrectSemantically).send()
+  }
+}
+const findMate = async (request: Request, response: Response) => {
+  const userId: string = request.body.userId
+  const myProfileResponse = await userDao.getUserById(userId)
+  if(!myProfileResponse.value){
+    response.status(httpStatuses.notFound).send('Profile not found')
+    return
+  }
+  const myGender = myProfileResponse.value.gender as _IUser['gender'] & string
+  if(myGender == 'unknown'){
+    response.status(httpStatuses.notCorrectSemantically).send('Your gender is unknown')
+    return
+  }
+
+  const oppositeGender = (myGender === 'female') ? 'male' : 'female';
+
+  try {
+    const databaseResponse = await userDao.getUserByGender(oppositeGender)
+    const httpStatus = httpStatuses[databaseResponse.status]
+    response.status(httpStatus).send(databaseResponse.value)
+  } catch (e) {
+    response.status(httpStatuses.internalError).send()
   }
 }
 
@@ -114,5 +137,6 @@ apiRouter.use('/', tokenHandler)
 apiRouter.get('/myProfile', getMyProfile)
 
 apiRouter.post('/follow', follow)
+apiRouter.get('/findMate', findMate)
 
 export default apiRouter

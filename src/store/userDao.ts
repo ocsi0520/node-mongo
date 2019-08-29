@@ -116,12 +116,18 @@ const completeRequest = async (user: IUser, followUser: IUser) => {
   const followUserUpdated = await addToUserArray(followUser, user, 'friends')
   const userFriendsUpdated = await removeUserRequest(user, followUser)
   const followUseruserFriendsUpdated = await removeUserPending(followUser, user)
+}
 
+const getUserByGender = async (gender: string) => {
+  const users: _IUser[] = await userModel.find({ gender: gender }, { __v: 0, password: 0, _id: 0 }).exec()
+  // user.password = undefined
+  return { status: DatabaseResponseStatuses.ok, value: users }
 }
 
 export default {
   registerUser,
   loginUser,
   getUserById,
-  followUser
+  followUser,
+  getUserByGender
 }
