@@ -5,6 +5,11 @@ import { body, validationResult } from 'express-validator'
 import { httpStatuses } from '../models/responses'
 import { createToken, verifyToken } from '../auth/jwt'
 
+const getUserIdFromToken = (token: string) => {
+  const { id: userId } = verifyToken(token) as any
+  return userId
+}
+
 const isValidRequest = (request: Request, response: Response) => {
   const errors = validationResult(request)
   if (!errors.isEmpty()) {
@@ -57,13 +62,13 @@ const loginUser = async (request: Request, response: Response) => {
 
 const getMyProfile = async (request: Request, response: Response) => {
   const userId: string = request.body.userId
-    try {
-      const databaseResponse = await userDao.getUserById(userId)
-      const httpStatus = httpStatuses[databaseResponse.status]
-      response.status(httpStatus).send(databaseResponse.value)
-    } catch (e) {
-      response.status(httpStatuses.internalError).send()
-    }
+  try {
+    const databaseResponse = await userDao.getUserById(userId)
+    const httpStatus = httpStatuses[databaseResponse.status]
+    response.status(httpStatus).send(databaseResponse.value)
+  } catch (e) {
+    response.status(httpStatuses.internalError).send()
+  }
 }
 
 const tokenHandler = (request: Request, response: Response, next: NextFunction) => {
@@ -77,6 +82,21 @@ const tokenHandler = (request: Request, response: Response, next: NextFunction) 
   next()
 }
 
+const follow = async (request: Request, response: Response) => {
+  // if (!isValidRequest(request, response)) { return }
+  const userId = getUserIdFromToken(request.cookies.token)
+  const followingUserId = request.body.followingUserId
+  if (userId && followingUserId) {
+    try {
+      const databaseResponse = await userDao.followUser(userId, followingUserId)
+      response.status(httpStatuses.ok).send(databaseResponse.value)
+    } catch (e) {
+      response.status(httpStatuses.notCorrectSyntactically).send()
+    }
+  } else {
+    response.status(httpStatuses.notCorrectSemantically).send()
+  }
+}
 
 apiRouter.post('/login', [
   body(['username','password']).isString()
@@ -92,5 +112,7 @@ apiRouter.post('/register', [
 apiRouter.use('/', tokenHandler)
 
 apiRouter.get('/myProfile', getMyProfile)
+
+apiRouter.post('/follow', follow)
 
 export default apiRouter
