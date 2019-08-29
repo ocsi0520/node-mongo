@@ -80,9 +80,9 @@ const addToUserArray = async (user: IUser, followUser: IUser, nameOfUserArray: s
   if (userArray === undefined) {
     userArray = []
   }
-  // userArray.push(followUser.id)
-  const userUpdated = userModel.findByIdAndUpdate(user.id, { $push: { nameOfUserArray: followUser.id } },{ 'new': true, 'upsert': true })
-  console.log('as')
+  userArray.push(followUser.id)
+  const userUpdated = await userModel.findByIdAndUpdate(user.id, { $addToSet: { [nameOfUserArray]: followUser.id } },{ 'new': true, 'upsert': true }).exec()
+
 }
 
 // Remove follow user to user friends
@@ -90,7 +90,12 @@ const removeUserRequest = async (user: IUser, followUser: IUser) => {
   let requests = user.requests
   const index = requests.indexOf(followUser.id)
   requests.splice(index, 1)
-  const userUpdated = userModel.findByIdAndUpdate(user.id, { requests: requests })
+  const userUpdated = await userModel.findById(user.id)
+  if (!userUpdated) {
+    return
+  }
+  userUpdated.requests = requests
+  userUpdated.save()
 }
 
 // Remove follow user to user friends
@@ -98,14 +103,19 @@ const removeUserPending = async (user: IUser, followUser: IUser) => {
   let pendings = user.pendings
   const index = pendings.indexOf(followUser.id)
   pendings.splice(index, 1)
-  const userUpdated = userModel.findByIdAndUpdate(user.id, { pendings: pendings })
+  const userUpdated = await userModel.findById(user.id)
+  if (!userUpdated) {
+    return
+  }
+  userUpdated.pendings = pendings
+  userUpdated.save()
 }
 
 const completeRequest = async (user: IUser, followUser: IUser) => {
   const userUpdated = await addToUserArray(user, followUser, 'friends')
   const followUserUpdated = await addToUserArray(followUser, user, 'friends')
-  const userFriendsUpdated = await removeUserRequest(followUser, user)
-  const followUseruserFriendsUpdated = await removeUserPending(user, followUser)
+  const userFriendsUpdated = await removeUserRequest(user, followUser)
+  const followUseruserFriendsUpdated = await removeUserPending(followUser, user)
 
 }
 
