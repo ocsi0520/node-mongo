@@ -68,12 +68,12 @@ const getMyProfile = async (request: Request, response: Response) => {
 
 const tokenHandler = (request: Request, response: Response, next: NextFunction) => {
   const token = request.cookies.token
-  const { id: userId } = verifyToken(token) as any
-  if (!userId) {
-    response.status(httpStatuses.notCorrectSemantically).send('token is missing, login please')
+  const verifiedToken: any = verifyToken(token)
+  if(!verifiedToken){
+    response.status(httpStatuses.notCorrectSemantically).send('token is missing, or incorrect')
     return
   }
-  request.body.userId = userId
+  request.body.userId = verifiedToken.id
   next()
 }
 
