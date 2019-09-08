@@ -74,7 +74,7 @@ const getMyProfile = async (request: Request, response: Response) => {
 const tokenHandler = (request: Request, response: Response, next: NextFunction) => {
   const token = request.cookies.token
   const verifiedToken: any = verifyToken(token)
-  if(!verifiedToken){
+  if (!verifiedToken) {
     response.status(httpStatuses.notCorrectSemantically).send('token is missing, or incorrect')
     return
   }
@@ -100,17 +100,17 @@ const follow = async (request: Request, response: Response) => {
 const findMate = async (request: Request, response: Response) => {
   const userId: string = request.body.userId
   const myProfileResponse = await userDao.getUserById(userId)
-  if(!myProfileResponse.value){
+  if (!myProfileResponse.value) {
     response.status(httpStatuses.notFound).send('Profile not found')
     return
   }
   const myGender = myProfileResponse.value.gender as _IUser['gender'] & string
-  if(myGender == 'unknown'){
+  if (myGender === 'unknown') {
     response.status(httpStatuses.notCorrectSemantically).send('Your gender is unknown')
     return
   }
 
-  const oppositeGender = (myGender === 'female') ? 'male' : 'female';
+  const oppositeGender = (myGender === 'female') ? 'male' : 'female'
 
   try {
     const databaseResponse = await userDao.getUserByGender(oppositeGender)

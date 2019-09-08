@@ -2,7 +2,7 @@ version: "2"
 services:
   app:
     container_name: app
-    restart: always
+    restart: never
     build: .
     ports:
       - "3000:3000"
