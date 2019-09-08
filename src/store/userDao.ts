@@ -1,6 +1,7 @@
 import userModel, { _IUser, IUser } from '../models/user'
 import bcrypt from 'bcrypt'
 import { DatabaseResponse, DatabaseResponseStatuses } from '../models/responses'
+import { isUserAlreadyRequested, completeRequest, addToUserArray } from './user-helper/add-operations';
 
 const saltRounds = 10 // TODO: it might worth to check this out: https://www.npmjs.com/package/bcrypt-salt
 
@@ -60,62 +61,13 @@ const followUser = async (userId: string, followUserId: string) => {
     const addRequestCompleted = await completeRequest(user, followUser)
     return { status: DatabaseResponseStatuses.ok, value: 'Following created' }
   } else {
-    const addPendingCompleted = await addToUserArray(user, followUser, 'pendings')
-    const addRequestCompleted = await addToUserArray(followUser, user, 'requests')
+    await Promise.all([
+      addToUserArray(user, 'pendings', followUser.id),
+      addToUserArray(followUser, 'requests', user.id)
+    ])
     return { status: DatabaseResponseStatuses.ok, value: 'Pending created' }
   }
 
-}
-
-const isUserAlreadyRequested = (user: IUser, followUser: IUser) => {
-  if (user.requests === undefined) {
-    return false
-  }
-  const index = user.requests.indexOf(followUser.id)
-  return index >= 0
-}
-
-const addToUserArray = async (user: IUser, followUser: IUser, nameOfUserArray: string) => {
-  let userArray = (user as any)[nameOfUserArray]
-  if (userArray === undefined) {
-    userArray = []
-  }
-  userArray.push(followUser.id)
-  const userUpdated = await userModel.findByIdAndUpdate(user.id, { $addToSet: { [nameOfUserArray]: followUser.id } },{ 'new': true, 'upsert': true }).exec()
-
-}
-
-// Remove follow user to user friends
-const removeUserRequest = async (user: IUser, followUser: IUser) => {
-  let requests = user.requests
-  const index = requests.indexOf(followUser.id)
-  requests.splice(index, 1)
-  const userUpdated = await userModel.findById(user.id)
-  if (!userUpdated) {
-    return
-  }
-  userUpdated.requests = requests
-  userUpdated.save()
-}
-
-// Remove follow user to user friends
-const removeUserPending = async (user: IUser, followUser: IUser) => {
-  let pendings = user.pendings
-  const index = pendings.indexOf(followUser.id)
-  pendings.splice(index, 1)
-  const userUpdated = await userModel.findById(user.id)
-  if (!userUpdated) {
-    return
-  }
-  userUpdated.pendings = pendings
-  userUpdated.save()
-}
-
-const completeRequest = async (user: IUser, followUser: IUser) => {
-  const userUpdated = await addToUserArray(user, followUser, 'friends')
-  const followUserUpdated = await addToUserArray(followUser, user, 'friends')
-  const userFriendsUpdated = await removeUserRequest(user, followUser)
-  const followUseruserFriendsUpdated = await removeUserPending(followUser, user)
 }
 
 const getUserByGender = async (gender: string) => {
