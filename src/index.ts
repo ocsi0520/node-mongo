@@ -11,9 +11,9 @@ import apiHandler from './api/api'
 import cookieParser from 'cookie-parser'
 import createWsServer from './websocket/main'
 import { Socket } from 'net'
+import { verifyToken, createToken } from './auth/jwt'
 
 const app = express()
-const httpServer = createServer(app)
 
 app.use(express.json())
 app.use(cookieParser())
@@ -32,22 +32,33 @@ app.use(cookieParser())
 
 app.use('/api', apiHandler)
 
-// httpServer.on('upgrade', (request: express.Request, socket: Socket, head: Headers) => {
-//   const cookie = request.cookies
-//   console.info({ cookie })
-//   // console.info({ request })
-//   // console.info({ socket })
-//   // console.info({ head })
-//   // socket.destroy()
-// })
-createWsServer(httpServer)
-
 app.use('/', (req, res) => {
   // EXAMINE: backtick-et elmagyarázni
   res.status(404).send(`Resource not found on '${req.originalUrl}'`)
 })
 
-httpServer.listen(3000, () => console.info('Listenning on port 3000'))
+const httpServer = app.listen(3000, () => console.info('Listenning on port 3000'))
+
+httpServer.on('upgrade', (request: express.Request, socket: Socket, head: Headers) => {
+  const verifiedToken = getVerifiedTokenFromUpgrade(request)
+  if (!verifiedToken) {
+    socket.destroy()
+    return
+  }
+})
+
+const getVerifiedTokenFromUpgrade = (request: express.Request) => {
+  const cookieHeader = request.headers.cookie
+  if (!cookieHeader) {
+    return null
+  }
+  const tokenMatch = cookieHeader.match(/token=([^;]*)/)
+  const token = tokenMatch && tokenMatch[1]
+  const verifiedToken = token && verifyToken(token)
+  return verifiedToken
+}
+
+createWsServer(httpServer)
 
 // proper http methods, statuses, and other stuffs:
 // https://tools.ietf.org/html/rfc7230
