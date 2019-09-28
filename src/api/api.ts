@@ -2,7 +2,7 @@ import { Router, Response, Request, NextFunction } from 'express'
 import userDao from '../store/userDao'
 import { _IUser } from '../models/user'
 import { body, validationResult } from 'express-validator'
-import { httpStatuses, DatabaseResponseStatuses } from '../models/responses'
+import { httpStatuses } from '../models/responses'
 import { createToken, verifyToken } from '../auth/jwt'
 
 const getUserIdFromToken = (token: string) => {
@@ -120,6 +120,16 @@ const findMate = async (request: Request, response: Response) => {
     response.status(httpStatuses.internalError).send()
   }
 }
+const deleteMyProfile = async (request: Request, response: Response) => {
+  const userId: string = request.body.userId
+  try {
+    userDao.deleteUserById(userId)
+    response.status(httpStatuses.noContent).send()
+  } catch (e) {
+    console.error(e.message)
+    response.status(httpStatuses.internalError).send('Problem at deletion')
+  }
+}
 
 apiRouter.post('/login', [
   body(['username','password']).isString()
@@ -135,6 +145,7 @@ apiRouter.post('/register', [
 apiRouter.use('/', tokenHandler)
 
 apiRouter.get('/myProfile', getMyProfile)
+apiRouter.delete('/myProfile', deleteMyProfile)
 
 apiRouter.post('/follow', follow)
 apiRouter.get('/findMate', findMate)

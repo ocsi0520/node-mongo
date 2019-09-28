@@ -1,7 +1,7 @@
 import userModel, { _IUser, IUser } from '../models/user'
 import bcrypt from 'bcrypt'
 import { DatabaseResponse, DatabaseResponseStatuses } from '../models/responses'
-import { isUserAlreadyRequested, completeRequest, addToUserArray } from './user-helper/add-operations';
+import { isUserAlreadyRequested, completeRequest, addToUserArray } from './user-helper/add-operations'
 
 const saltRounds = 10 // TODO: it might worth to check this out: https://www.npmjs.com/package/bcrypt-salt
 
@@ -76,10 +76,15 @@ const getUserByGender = async (gender: string) => {
   return { status: DatabaseResponseStatuses.ok, value: users }
 }
 
+const deleteUserById = async (userId: string) => {
+  return userModel.deleteOne({ _id: userId }).exec()
+}
+
 export default {
   registerUser,
   loginUser,
   getUserById,
   followUser,
-  getUserByGender
+  getUserByGender,
+  deleteUserById
 }

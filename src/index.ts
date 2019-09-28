@@ -3,7 +3,6 @@
 // https://stackoverflow.com/questions/53216884/how-to-connect-to-mongodb-using-node-js-written-in-typescript
 import express from 'express'
 import dotenv from 'dotenv'
-import { createServer } from 'http'
 dotenv.config()
 
 import { connectToMongoDb } from './store/init'
